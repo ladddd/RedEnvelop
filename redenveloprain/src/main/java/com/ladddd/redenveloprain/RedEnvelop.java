@@ -26,7 +26,7 @@ public class RedEnvelop {
     private int bitmapWidth;
     private float present;
     private RectF bitmapRect;
-    private int maxpresentFrameCount = 30;
+    private int maxPresentFrameCount = 30;
     private int presentFrameCount = 30;
     private String bonusId;
 
@@ -122,12 +122,12 @@ public class RedEnvelop {
         this.presentFrameCount = presentFrameCount;
     }
 
-    public int getMaxpresentFrameCount() {
-        return maxpresentFrameCount;
+    public int getMaxPresentFrameCount() {
+        return maxPresentFrameCount;
     }
 
-    public void setMaxpresentFrameCount(int maxpresentFrameCount) {
-        this.maxpresentFrameCount = maxpresentFrameCount;
+    public void setMaxPresentFrameCount(int maxPresentFrameCount) {
+        this.maxPresentFrameCount = maxPresentFrameCount;
     }
 
     public RectF getBitmapRect() {

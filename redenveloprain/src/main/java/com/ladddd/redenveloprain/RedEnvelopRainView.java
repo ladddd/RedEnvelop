@@ -106,6 +106,11 @@ public class RedEnvelopRainView extends View {
         }
     }
 
+    public RedEnvelopRainView(Context context, EventListener listener) {
+        this(context);
+        this.listener = listener;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if (isGameOver) {
@@ -197,7 +202,7 @@ public class RedEnvelopRainView extends View {
         for (int i = 0; i < clickedList.size(); i++) {
             RedEnvelop redEnvelop = (RedEnvelop) iterator.next();
             int leftFrameCount = redEnvelop.getPresentFrameCount();
-            int maxPresentFrameCount = redEnvelop.getMaxpresentFrameCount();
+            int maxPresentFrameCount = redEnvelop.getMaxPresentFrameCount();
             matrix.setTranslate(0, 0);
             matrix.setScale(redEnvelop.getScale(), redEnvelop.getScale());
             //只显示爆炸效果，不再显示金币
