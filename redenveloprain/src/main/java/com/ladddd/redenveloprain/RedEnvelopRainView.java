@@ -97,15 +97,6 @@ public class RedEnvelopRainView extends View {
         return 0;
     }
 
-    public RedEnvelopRainView(Context context, EventListener listener, RedEnvelopData redEnvelopData) {
-        this(context);
-        this.listener = listener;
-        if (redEnvelopData != null && redEnvelopData.data != null) {
-            time = redEnvelopData.data.durationSeconds * 1000;
-            count = redEnvelopData.data.totalCount;
-        }
-    }
-
     public RedEnvelopRainView(Context context, EventListener listener) {
         this(context);
         this.listener = listener;
