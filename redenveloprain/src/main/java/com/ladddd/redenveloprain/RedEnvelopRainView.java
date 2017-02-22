@@ -7,6 +7,7 @@ import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.CountDownTimer;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -15,15 +16,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by ladddd on 2017/2/20.
  */
 public class RedEnvelopRainView extends View {
 
-    private MyThread thread;
+    private DrawThread thread;
     private EventListener listener;
     private Bitmap bitmap;
     private Bitmap emptyBitmap1;
@@ -36,8 +35,8 @@ public class RedEnvelopRainView extends View {
     private boolean isGameOver = false; //游戏结束, 不能点击
     private Random random;
     private int count = 100;
-    private int time = 15000; //15s
-    private int timeInterval = 250;
+    private long time = 15000; //15s
+    private long timeInterval = 250;
     private boolean isFinish = false;
 
     public RedEnvelopRainView(Context context, AttributeSet attrs) {
@@ -52,37 +51,32 @@ public class RedEnvelopRainView extends View {
         emptyBitmap3 = BitmapFactory.decodeResource(getResources(), R.drawable.ico_air_c);
 
         random = new Random();
-        final Timer timer = new Timer(true);
-        timer.schedule(new TimerTask() {
+        CountDownTimer timer = new CountDownTimer(time, timeInterval) {
             @Override
-            public void run() {
-                RedEnvelopRainView.this.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        int number = getDropNumber(); //计算得到每一波红包个数
-                        for (int i = 0; i < number; i++) {
-                            RedEnvelop redEnvelop = RedEnvelopFactory.createRedEnvelop(bitmap.getWidth(), context);
-                            redEnvelopList.add(redEnvelop);
-                        }
-                        count-=number;
-                        time-=timeInterval;
-                        if (time % 1000 == 0) {
-                            if (listener != null) {
-                                listener.onSecondPassed(time/1000);
-                            }
-                        }
-                        if (time == 0) {
-                            isGameOver = true;
-                            if (listener != null) {
-                                listener.onRainStop();
-                            }
-                            timer.cancel();
-                            timer.purge();
-                        }
+            public void onTick(long millisUntilFinished) {
+                int number = getDropNumber(); //计算得到每一波红包个数
+                for (int i = 0; i < number; i++) {
+                    RedEnvelop redEnvelop = RedEnvelopFactory.createRedEnvelop(bitmap.getWidth(), context);
+                    redEnvelopList.add(redEnvelop);
+                }
+                count-=number;
+                time = millisUntilFinished;
+                if (time % 1000 == 0) {
+                    if (listener != null) {
+                        listener.onTimeTick(time/1000);
                     }
-                });
+                }
             }
-        }, 0, timeInterval); //几秒一波 0.2s
+
+            @Override
+            public void onFinish() {
+                isGameOver = true;
+                if (listener != null) {
+                    listener.onRainStop();
+                }
+            }
+        };
+        timer.start();
     }
 
     private int getDropNumber() {
@@ -90,7 +84,7 @@ public class RedEnvelopRainView extends View {
             return 0;
         }
         //结束前1秒不再掉落
-        int leftDropTime = (time - 1000)/timeInterval; //剩余掉落次数
+        int leftDropTime = (int) ((time - 1000)/timeInterval); //剩余掉落次数
         if (leftDropTime > 0) {
             return count / leftDropTime + ((random.nextInt(100) % 2 == 0)?1:0);
         }
@@ -113,7 +107,7 @@ public class RedEnvelopRainView extends View {
                 event.getAction() == MotionEvent.ACTION_POINTER_1_DOWN||
                 event.getAction() == MotionEvent.ACTION_POINTER_2_DOWN||
                 event.getAction() == MotionEvent.ACTION_POINTER_3_DOWN) {
-            //支持多点
+            //enable multiple click
             int pointerIndex = event.getActionIndex();
             checkClickPosition(event.getX(pointerIndex), event.getY(pointerIndex));
         }
@@ -141,7 +135,7 @@ public class RedEnvelopRainView extends View {
         super.onDraw(canvas);
 
         if (thread == null) {
-            thread = new MyThread();
+            thread = new DrawThread();
             thread.start();
         }
         drawSub(canvas);
@@ -151,7 +145,7 @@ public class RedEnvelopRainView extends View {
         for (int i = 0; i < redEnvelopList.size(); i++) {
             toAppear(canvas, i);
         }
-        //应该浮在所有红包的上层，不会被其他红包遮挡
+        //this effect last for seconds, draw above of all red envelops
         showPresent(canvas);
     }
 
@@ -216,14 +210,14 @@ public class RedEnvelopRainView extends View {
         }
     }
 
-    private class MyThread extends Thread {
+    private class DrawThread extends Thread {
         @Override
         public void run() {
             while (!isFinish) {
                 postInvalidate();
                 move();
                 try {
-                    sleep(17);
+                    sleep(17); //refresh view every 17ms
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -231,12 +225,13 @@ public class RedEnvelopRainView extends View {
         }
     }
 
+    //manually stop this view, or it will not GC
     public void onDestroy() {
         isFinish = true;
     }
 
     public interface EventListener {
-        void onSecondPassed(int leftSecond);
+        void onTimeTick(long leftSecond);
         void onRainStop();
         void onRedEnvelopUnfold(float present, String bonusId);
     }

@@ -33,7 +33,7 @@ public class RedEnvelopActivity extends Activity implements RedEnvelopRainView.E
     }
 
     @Override
-    public void onSecondPassed(int leftSecond) {
+    public void onTimeTick(long leftSecond) {
 
     }
 
